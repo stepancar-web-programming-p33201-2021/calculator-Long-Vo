@@ -1,16 +1,14 @@
 version: '3'
 
 services:
-#  frontend:
-#    container_name: frontend
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#      target: react-docker
-#    env_file:
-#      - frontend/.env_example
-#    ports:
-#      - "9333:9333"
+  frontend:
+    container_name: frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: react-docker
+    ports:
+      - "9333:9333"
 
   backend:
     container_name: backend

@@ -6,7 +6,7 @@ RUN yarn build
 
 FROM nginx:alpine AS react-docker
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=react-build /app/build /usr/share/nginx/html
+COPY --from=react-build /frontend/build /usr/share/nginx/html
 EXPOSE 9333
 CMD ["nginx", "-g", "daemon off;"]
 
