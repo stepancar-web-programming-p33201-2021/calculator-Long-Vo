@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Table, TableBody, TableRow, TableCell, styled } from '@mui/material';
 
-import { AcKey, EqualKey, FunctionKey, InvButton, NumberKey, OperationKey, RagDegKey } from './Keys';
-import { fillBracket, fillTag, lastNumber } from '../../core/utils/parseUtils';
+import { ClearKey, EqualKey, FunctionKey, InvKey, NumberKey, OperationKey, RagDegKey } from '../components';
+import { countAppear, fillBracket, fillTag, isPreviousNumber, lastNumber } from '../../core/utils/parseUtils';
 import { randomGenerate } from '../../core/utils/formatNumber';
-import { calculate } from '../reducers/calculatorReducer';
+import { calculate } from '../reducers/expressionReducer';
+import { setCurrentExpression, setError } from '../reducers/screenReducer';
 
 const CustomCell = styled(TableCell)(({ theme }) => ({
     padding: theme.spacing(1),
@@ -19,9 +19,9 @@ const CustomSup = styled('sup')({
     bottom: '4px'
 });
 
-export default function Keyboard({ expression, setExpression }) {
+export default function Keyboard() {
     const dispatch = useDispatch();
-    const { loading, result } = useSelector((state) => state?.calculator?.calculator);
+    const { currentExpression } = useSelector((state) => state?.calculator?.screen);
 
     const [isDeg, setIsDeg] = useState(false);
     const [isInv, setIsInv] = useState(false);
@@ -30,24 +30,26 @@ export default function Keyboard({ expression, setExpression }) {
     const switchIsInv = () => setIsInv(!isInv);
 
     const addExpression = (newValue) => {
-        setExpression([...expression, fillTag(expression.join(''), newValue) + newValue]);
+        dispatch(
+            setCurrentExpression([...currentExpression, fillTag(currentExpression.join(''), newValue) + newValue])
+        );
+    };
+
+    const clearEntryExpression = () => {
+        dispatch(setCurrentExpression(currentExpression.slice(0, -1)));
+    };
+
+    const allClearExpression = () => {
+        dispatch(setCurrentExpression([]));
     };
 
     const handleSubmit = () => {
         dispatch(
             calculate({
-                expression: fillBracket(expression.join(''))
+                expression: fillBracket(currentExpression.join(''))
             })
         );
     };
-
-    useEffect(() => {
-        if (!loading && result) {
-            // setPreviousExpression(expression);
-            // setExpression(result);
-            alert(result);
-        }
-    }, [loading, result, setExpression]);
 
     return (
         <Table>
@@ -63,24 +65,40 @@ export default function Keyboard({ expression, setExpression }) {
                         <FunctionKey onClick={() => addExpression('(')}>(</FunctionKey>
                     </CustomCell>
                     <CustomCell>
-                        <FunctionKey onClick={() => addExpression(')')}>)</FunctionKey>
+                        <FunctionKey
+                            onClick={() => {
+                                if (
+                                    countAppear(currentExpression.join(''), '(') >
+                                    countAppear(currentExpression.join(''), ')')
+                                )
+                                    addExpression(')');
+                                else
+                                    dispatch(
+                                        setError(
+                                            'Количество открытых скобок должно быть больше количества закрывающих скобок'
+                                        )
+                                    );
+                            }}
+                        >
+                            )
+                        </FunctionKey>
                     </CustomCell>
                     <CustomCell>
                         <FunctionKey onClick={() => addExpression('%')}>%</FunctionKey>
                     </CustomCell>
                     <CustomCell>
-                        {expression.length > 1 ? (
-                            <AcKey onClick={() => setExpression(expression.splice(-1))}>CE</AcKey>
+                        {currentExpression.length > 1 ? (
+                            <ClearKey onClick={clearEntryExpression} isCE />
                         ) : (
-                            <AcKey onClick={() => setExpression([''])}>AC</AcKey>
+                            <ClearKey onClick={allClearExpression} />
                         )}
                     </CustomCell>
                 </TableRow>
                 <TableRow>
                     <CustomCell>
-                        <InvButton onClick={switchIsInv} isInv={isInv}>
+                        <InvKey onClick={switchIsInv} isInv={isInv}>
                             Inv
-                        </InvButton>
+                        </InvKey>
                     </CustomCell>
                     <CustomCell>
                         {isInv ? (
@@ -192,20 +210,32 @@ export default function Keyboard({ expression, setExpression }) {
                         )}
                     </CustomCell>
                     <CustomCell>
-                        <FunctionKey onClick={() => addExpression('E')}>EXP</FunctionKey>
+                        <FunctionKey
+                            onClick={() => {
+                                if (isPreviousNumber(currentExpression.join(''))) addExpression('E');
+                                else dispatch(setError('E должно стоять после числа'));
+                            }}
+                        >
+                            EXP
+                        </FunctionKey>
                     </CustomCell>
                     <CustomCell>
                         {/* {isInv ? ( */}
                         {/*    <FunctionKey */}
                         {/*        onClick={() => { */}
-                        {/*            setExpression([...expression].splice(-1)); */}
-                        {/*            addExpression(`<sup>${lastNumber(expression.join(''))}</sup>√`); */}
+                        {/*            setExpression([...currentExpression].splice(-1)); */}
+                        {/*            addExpression(`<sup>${lastNumber(currentExpression.join(''))}</sup>√`); */}
                         {/*        }} */}
                         {/*    > */}
                         {/*        <CustomSup>y</CustomSup>√x */}
                         {/*    </FunctionKey> */}
                         {/* ) : ( */}
-                        <FunctionKey onClick={() => addExpression('<sup>')}>
+                        <FunctionKey
+                            onClick={() => {
+                                if (isPreviousNumber(currentExpression.join(''))) addExpression('<sup>');
+                                else dispatch(setError('Функция степени должна стоять после числа'));
+                            }}
+                        >
                             x<CustomSup>y</CustomSup>
                         </FunctionKey>
                         {/* )} */}
@@ -216,8 +246,8 @@ export default function Keyboard({ expression, setExpression }) {
                     <CustomCell>
                         <NumberKey
                             onClick={() => {
-                                if (lastNumber(expression.join('')).indexOf('.') > -1) return;
-                                addExpression('.');
+                                if (lastNumber(currentExpression.join('')).indexOf('.') === -1) addExpression('.');
+                                else dispatch(setError('В числе может быть только 1 точка'));
                             }}
                         >
                             .
@@ -234,8 +264,3 @@ export default function Keyboard({ expression, setExpression }) {
         </Table>
     );
 }
-
-Keyboard.propTypes = {
-    expression: PropTypes.array,
-    setExpression: PropTypes.func
-};

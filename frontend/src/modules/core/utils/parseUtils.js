@@ -12,6 +12,8 @@ export const lastNumber = (string) => {
     return number;
 };
 
+export const isPreviousNumber = (string) => lastNumber(string) !== '';
+
 export const fillTag = (expression, newValue) => {
     const requiredCloseTag = countAppear(expression, '<sup>') - countAppear(expression, '</sup>');
     return isNumber(newValue) ? '' : '</sup>'.repeat(requiredCloseTag);

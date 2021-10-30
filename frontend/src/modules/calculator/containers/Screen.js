@@ -1,8 +1,8 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import { styled, Container, Box, Typography } from '@mui/material';
 
+import { useSelector } from 'react-redux';
 import { fillBracket } from '../../core/utils/parseUtils';
 
 const ScreenContainer = styled(Container)(({ theme }) => ({
@@ -31,11 +31,19 @@ const ExpressionTypography = styled(Typography)({
     padding: 0
 });
 
-export default function Screen({ previousExpression, currentExpression }) {
+export default function Screen() {
+    const { currentExpression, previousExpression, isChanged } = useSelector((state) => state?.calculator?.screen);
+    const { result } = useSelector((state) => state?.calculator?.expression);
+
     return (
         <Box padding={1}>
             <ScreenContainer disableGutters>
-                <ResultTypography component="p">{`${previousExpression}=`}</ResultTypography>
+                <ResultTypography
+                    component="p"
+                    dangerouslySetInnerHTML={{
+                        __html: !isChanged ? `${fillBracket(previousExpression.join(''))}=` : `Ans=${result}`
+                    }}
+                />
                 <ExpressionTypography
                     component="p"
                     dangerouslySetInnerHTML={{ __html: fillBracket(currentExpression.join('')) }}
@@ -44,8 +52,3 @@ export default function Screen({ previousExpression, currentExpression }) {
         </Box>
     );
 }
-
-Screen.propTypes = {
-    previousExpression: PropTypes.string,
-    currentExpression: PropTypes.string
-};

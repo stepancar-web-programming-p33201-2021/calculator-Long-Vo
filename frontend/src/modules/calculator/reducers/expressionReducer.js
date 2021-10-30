@@ -19,7 +19,7 @@ export const calculate = asyncAction('CALCULATOR/CALCULATE', ({ expression }) =>
 
 const initialState = {
     loading: false,
-    response: true,
+    result: 0,
     error: false
 };
 

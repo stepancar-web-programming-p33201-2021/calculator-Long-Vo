@@ -1,1 +1,1 @@
-export { default as Calculator } from './containers/Calculator';
+export { Calculator } from './containers';

@@ -1,6 +1,8 @@
 import { combineReducers } from 'redux';
-import calculatorReducer from './calculatorReducer';
+import expressionReducer from './expressionReducer';
+import screenReducer from './screenReducer';
 
 export default combineReducers({
-    calculator: calculatorReducer
+    expression: expressionReducer,
+    screen: screenReducer
 });
