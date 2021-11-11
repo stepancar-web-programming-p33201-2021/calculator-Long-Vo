@@ -1,4 +1,4 @@
-# Calculator
+# Calculator - Long Vo
 
 ## Как запустить программу
 ### Без docker
